@@ -1,0 +1,44 @@
+name: AI Code Review
+on:
+  workflow_call:
+    secrets:
+      OLLAMA_API_KEY:
+        required: true
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/checkout@v4
+        with:
+          repository: roex-audio/.github
+          path: .ci-tools
+          sparse-checkout: .github/scripts
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - run: pip install requests
+
+      - name: Get diff
+        run: |
+          git diff origin/${{ github.event.pull_request.base.ref }}..HEAD > diff.patch
+          [ -s diff.patch ] || echo "SKIP=true" >> $GITHUB_ENV
+
+      - name: Review
+        if: env.SKIP != 'true'
+        env:
+          OLLAMA_API_KEY: ${{ secrets.OLLAMA_API_KEY }}
+          GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          REPO: ${{ github.repository }}
+        run: python .ci-tools/.github/scripts/review.py
