@@ -12,7 +12,7 @@ import sys
 import requests
 
 OLLAMA_API_URL = "https://ollama.com/v1/chat/completions"
-MODEL = "glm-5.2:cloud"
+MODEL = "glm-5.3:cloud"
 MAX_DIFF_LINES = 4000
 
 SYSTEM_PROMPT = """\
